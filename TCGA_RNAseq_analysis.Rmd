@@ -4,14 +4,80 @@ title: "R Notebook: TCGA_RNAseq_analysis"
 output: html_notebook
 ---
 
-This notebook contains my code and workflow for RNAseq analysis on <> TCGA database 
+This notebook contains my code and workflow for RNA-seq analysis on <> TCGA database 
 
 ```{r}
-plot(cars)
+# Load packages
+library("TCGAbiolinks")
+library("limma")
+library("edgeR")
+library("glmnet")
+library("factoextra")
+library("FactoMineR")
+library("caret")
+library("SummarizedExperiment")
+library("gplots")
+library("survival")
+library("survminer")
+library("RColorBrewer")
+library("gProfileR")
+library("genefilter")
+```
+```{r}
+GDCprojects = getGDCprojects()
+
+head(GDCprojects[c("project_id", "name")])
+```
+```{r}
+query_lgg <- GDCquery(project = "TCGA-LGG", data.category = "Transcriptome Profiling", experimental.strategy = "RNA-Seq", workflow.type = "HTSeq - Counts")  
+```
+```{r}
+lgg_results <- getResults(query_lgg)
+```
+```{r}
+colnames(lgg_results)
+```
+```{r}
+head(lgg_results$sample_type) #looking at the type of tumor
+#subset samples with sample_type entered as "Primary Tumor"
+primary_tumor_res <- lgg_results[lgg_results$sample_type == "Primary Tumor",]     
+#subset samples which are not entered as "Primary Tumor"
+nonprimary_tumor_res <- lgg_results[lgg_results$sample_type != "Primary Tumor",]
+nonprimary_tumor_res$sample_type    #Looking at the sample_type in non-primary tumor 
+
+```
+There are 18 samples with sample_type given as "Recurrent Tumor" and remaining 511 samples have sample_type given as "Primary Tumor". I am removing samples with "Recurrent tumor" as sample_type. Redoing the query:
+
+```{r}
+query_lgg <- GDCquery(project = "TCGA-LGG", data.category = "Transcriptome Profiling", experimental.strategy = "RNA-Seq", workflow.type = "HTSeq - Counts", sample.type = "Primary Tumor") 
+```
+Downloading files specified in the query above:
+```{r}
+GDCdownload(query = query_lgg)
+```
+Loading the RNASeq data into R wiht GDCprepare function:
+```{r}
+lgg_data <- GDCprepare(query_lgg)
+```
+```{r}
+dim(lgg_data)
+data.class(lgg_data)
+```
+The data is loaded in R as Ranged summarized experiment object. Therefore, we will use three functions, colData(), rowData(), and assay(), to access data from this object. colData() function can access the clinical data table associated with the samples.
+```{r}
+colnames(colData(lgg_data))
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+assay() function is used to access counts data for the summarized experiment object. Rows are gene ids and columns are sample names in the counts table. 
+```{r}
+head(assay(lgg_data)[,1:5])       #counts for first 6 genes and first 5 samples
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+Saving RNASeq data as .RDS file which can be loaded anytime without having to run the whole notebook again
+```{r}
+saveRDS(object = lgg_data,
+        file = "lgg_data.RDS",
+        compress = FALSE)
+```
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
