@@ -4,8 +4,9 @@ title: "R Notebook: TCGA_RNAseq_analysis"
 output: html_notebook
 ---
 
-This notebook contains my code and workflow for RNA-seq analysis on <> TCGA database 
+This notebook contains my code and workflow for RNA-seq analysis on TCGA-LGG project which is brain lower grade glioma project containing 516 cases for transcriptome profiling.
 
+First, I am loading following packages required for analysis:
 ```{r}
 # Load packages
 library("TCGAbiolinks")
@@ -23,14 +24,19 @@ library("RColorBrewer")
 library("gProfileR")
 library("genefilter")
 ```
+
+Let's look at the projects available on GDC:
 ```{r}
 GDCprojects = getGDCprojects()
 
 head(GDCprojects[c("project_id", "name")])
 ```
+
+I have picked brain lower grade glioma project which has a project id "TCGA-LGG". GDCquery() function from TCGAbiolinks package allows me to look at some of the information available for the TCGA-LGG project available in the TCGA database. I am going to look at the RNAseq data for this project 
 ```{r}
 query_lgg <- GDCquery(project = "TCGA-LGG", data.category = "Transcriptome Profiling", experimental.strategy = "RNA-Seq", workflow.type = "HTSeq - Counts")  
 ```
+getResults() function would give me the counts data in the form of a table which will be useful for further analysis
 ```{r}
 lgg_results <- getResults(query_lgg)
 ```
@@ -46,7 +52,7 @@ nonprimary_tumor_res <- lgg_results[lgg_results$sample_type != "Primary Tumor",]
 nonprimary_tumor_res$sample_type    #Looking at the sample_type in non-primary tumor 
 
 ```
-There are 18 samples with sample_type given as "Recurrent Tumor" and remaining 511 samples have sample_type given as "Primary Tumor". I am removing samples with "Recurrent tumor" as sample_type. Redoing the query:
+We can see above that there are 18 samples with sample_type given as "Recurrent Tumor" and remaining 511 samples have sample_type given as "Primary Tumor". I am removing samples with "Recurrent tumor" as sample_type. Redoing the query:
 
 ```{r}
 query_lgg <- GDCquery(project = "TCGA-LGG", data.category = "Transcriptome Profiling", experimental.strategy = "RNA-Seq", workflow.type = "HTSeq - Counts", sample.type = "Primary Tumor") 
@@ -55,13 +61,13 @@ Downloading files specified in the query above:
 ```{r}
 GDCdownload(query = query_lgg)
 ```
-Loading the RNASeq data into R wiht GDCprepare function:
+Loading the RNASeq data into R with GDCprepare() function:
 ```{r}
 lgg_data <- GDCprepare(query_lgg)
 ```
 ```{r}
-dim(lgg_data)
-data.class(lgg_data)
+dim(lgg_data)     #dim() function gives the dimensions of lgg_data counts table
+data.class(lgg_data)  #the lgg_data is loaded as a Ranged summarized experiment as seen below
 ```
 The data is loaded in R as Ranged summarized experiment object. Therefore, we will use three functions, colData(), rowData(), and assay(), to access data from this object. colData() function can access the clinical data table associated with the samples.
 ```{r}
@@ -73,7 +79,7 @@ assay() function is used to access counts data for the summarized experiment obj
 head(assay(lgg_data)[,1:5])       #counts for first 6 genes and first 5 samples
 ```
 
-Saving RNASeq data as .RDS file which can be loaded anytime without having to run the whole notebook again
+Saving RNASeq data as '.RDS' file which can be loaded anytime without having to run the whole notebook again
 ```{r}
 saveRDS(object = lgg_data,
         file = "lgg_data.RDS",
