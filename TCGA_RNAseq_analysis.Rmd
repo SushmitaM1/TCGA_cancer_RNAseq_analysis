@@ -79,11 +79,86 @@ assay() function is used to access counts data for the summarized experiment obj
 head(assay(lgg_data)[,1:5])       #counts for first 6 genes and first 5 samples
 ```
 
-Saving RNASeq data as '.RDS' file which can be loaded anytime without having to run the whole notebook again
+Saving RNASeq data as '.RDS' file which can be loaded anytime using readRDS() function without having to run the whole notebook again
 ```{r}
 saveRDS(object = lgg_data,
         file = "lgg_data.RDS",
         compress = FALSE)
 ```
+Let's load the lgg_data.RDS:
+```{r}
+lgg_data <- readRDS(file = "lgg_data.RDS")
+```
+
+I am going to look the summaries of some columns from colData to get a better understanding. I will use table() function for that:
+```{r}
+table(lgg_data@colData$gender)
+```
+There are a total of 510 patients with a gender specified, and 1 patient whose gender is not specified, we will remove that sample from counts table:
+```{r}
+complete.cases(lgg_data@colData$gender)
+
+phenotype_data[366, c("patient", "gender")] #366th row has NA as gender
+```
+```{r}
+NA_removed_pheno <- colData(lgg_data)[-366,]
+NA_removed_counts <- subset(assay(lgg_data), select = -366)       #removing 366th column which corresponds to the sample with NA as
+```
+
+```{r}
+dim(NA_removed_pheno)
+dim(NA_removed_counts)
+```
+
+```{r}
+table(lgg_data@colData$paper_Age..years.at.diagnosis.)
+```
+```{r}
+table(lgg_data@colData$paper_Vital.status..1.dead.)
+```
+```{r}
+table(lgg_data@colData$tumor_stage)
+```
+```{r}
+table(lgg_data@colData$race)
+```
+```{r}
+table(lgg_data@colData$definition)
+```
+
+Differential Expression analysis:
+
+I will be looking at whether there are differentially expressed genes in male vs female brain glioma patients. First, I will normalize the counts data in order to handle batch effects: 
+
+```{r}
+phenotype_data <- colData(lgg_data)
+gender_factor <- factor(phenotype_data$gender) #converting gender into a factor variable in order to use it for limma package
+gender_factor <- relevel(gender_factor, ref = "female") #setting "female" as the reference level
+```
+
+```{r}
+design_mat <- model.matrix(~gender_factor)  #creating a design matrix to be used for DE analysis
+head(design_mat)
+```
+
+```{r}
+dge_gender <- DGEList(counts = NA_removed_counts, samples = NA_removed_pheno, genes = as.data.frame(rowData(lgg_data)))  #creating a DGEList object from lgg_data, facilitates filtering
+
+keep_genes <- filterByExpr.default(dge_gender, design_mat)   #keeps genes which have read counts above 10 (default)
+dge_gender <- dge_gender[keep_genes, , keep.lib.sizes = FALSE]   #filtering the DGEList object
+rm(keep_genes)
+dim(dge_gender)
+```
+I am using Trimmed mean of M-values (TMM) method for data normalization. And I am using VOOM method to convert the data to have a similar variance as arrays (must do this for limma)
+```{r}
+dge_gender = calcNormFactors(dge_gender,method="TMM")
+v_gender = voom(dge_gender,design_mat,plot=TRUE)
+```
+```{r}
+
+```
+
+
+
 
 
