@@ -154,9 +154,17 @@ I am using Trimmed mean of M-values (TMM) method for data normalization. And I a
 dge_gender = calcNormFactors(dge_gender,method="TMM")
 v_gender = voom(dge_gender,design_mat,plot=TRUE)
 ```
+I am going to run lmFit() function on the v_gender object obtained above and then eBayes() function on the linear models obtained from lmFit(). I will use eBayes results statistics to rank the differentially expressed genes:
 ```{r}
-
+linear_mods <- lmFit(v_gender, design_mat)
+linear_mods <- eBayes(linear_mods)
 ```
+ Let's look at the top 10 differentially expressed genes:
+```{r}
+DE_genes <- topTable(linear_mods, coef = 1, sort.by ="p")
+print(DE_genes)
+```
+
 
 
 
