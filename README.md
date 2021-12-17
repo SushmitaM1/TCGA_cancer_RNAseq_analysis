@@ -5,4 +5,4 @@ This repository contains my code, workflow, and results from analysis of brain l
 
 .nb.Rmd file https://htmlpreview.github.io/?https://github.com/SushmitaM1/TCGA_cancer_RNAseq_analysis/blob/main/TCGA_RNAseq_analysis.nb.html is the html version of the notebook with output cells
 
-Credit: https://costalab.ukaachen.de/open_data/Bioinformatics_Analysis_in_R_2019/BIAR_D3/handout.html
+Credit: https://www.costalab.org/wp-content/uploads/2021/11/handout_day41.html (Check costalab.org website's "teaching" section for updated versions)
