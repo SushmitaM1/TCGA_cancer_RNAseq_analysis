@@ -1,5 +1,5 @@
 # TCGA_cancer_RNAseq_analysis
-This repository contains my code, workflow, and results from analysis of brain lower garde glioma project data (project id: TCGA-LGG) from TCGA database in R. 
+This repository contains my code, workflow, and results from analysis of brain lower grade glioma project data (project id: TCGA-LGG) from TCGA database in R. 
 
 .Rmd file https://github.com/SushmitaM1/TCGA_cancer_RNAseq_analysis/blob/main/TCGA_RNAseq_analysis.Rmd is an R notebook and you can run it in Rstudio.
 
